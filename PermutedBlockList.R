@@ -3,14 +3,13 @@ library(R6)
 library(purrr)
 library(lubridate)
 
-PermutedBlockList <- R6Class("Queue",
+PermutedBlockList <- R6Class("PermutedBlockList",
   public = list(
-    q = list(),
+    queue = list(),
     max_allocs = NULL,
     n_randomised = 0,
     allocation_id = 1,
     block_id = 1,
-    n_allocations_in_blocks = 0,
     arms = NULL,
     block_sizes = NULL,
     enque_n_blocks = NULL,
@@ -31,21 +30,21 @@ PermutedBlockList <- R6Class("Queue",
       cat(glue(
         "Sizes: {paste(self$block_sizes, collapse = ', ')}",
         "No. block to add: {self$enque_n_blocks}",
-        "Allocations remaining: {length(self$q)}",
+        "Allocations remaining: {length(self$queue)}",
         .sep = " -- "
       ))
     },
     allocate_next = function() {
       # NB: Inefficient implementation, but fine for prototyping with short lists
-      if (length(self$q) == 0) private$enque()
       if (self$n_randomised >= self$max_allocs) {
         cat("Will randomise no more patients, max_allocs reached")
         return(NULL)
       }
-      val <- self$q[[1]]
-      self$q <- self$q[-1]
+      if (length(self$q) == 0) private$enque()
+
+      val <- self$queue[[1]]
+      self$queue <- self$queue[-1]
       self$n_randomised <- self$n_randomised + 1
-      print(val)
       return(val$arm)
     }
   ),
@@ -59,7 +58,7 @@ PermutedBlockList <- R6Class("Queue",
     set_seed = function() {
       seed_used <- self$seed
       set.seed(seed_used)
-      self$seed <- self$seed + 1
+      self$seed <- seed_used + 1
       invisible(seed_used)
     },
     enque = function() {
@@ -84,7 +83,7 @@ PermutedBlockList <- R6Class("Queue",
 
       private$set_seed()
       blocks <- sample(self$block_sizes, self$enque_n_blocks, TRUE)
-      self$q <- flatten(map(blocks, allocate_within_block, arms = self$arms))
+      self$queue <- flatten(map(blocks, allocate_within_block, arms = self$arms))
     }
   )
 )
