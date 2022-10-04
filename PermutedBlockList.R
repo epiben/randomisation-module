@@ -13,13 +13,15 @@ PermutedBlockList <- R6Class("PermutedBlockList",
     arms = NULL,
     block_sizes = NULL,
     enque_n_blocks = NULL,
-    seed = 4131,
+    seed = NULL,
 
-    initialize = function(arms = c("A", "B"), block_sizes = c(4, 6, 8), enque_n_blocks = 3, max_allocs = Inf) {
+    initialize = function(arms = c("A", "B"), block_sizes = c(4, 6, 8),
+                          enque_n_blocks = 3, max_allocs = Inf, seed = 4131) {
       self$max_allocs <- max_allocs
       self$arms <- arms
       self$block_sizes <- block_sizes
       self$enque_n_blocks <- enque_n_blocks
+      self$seed <- seed
 
       private$check_block_params()
       private$enque()
@@ -89,8 +91,8 @@ PermutedBlockList <- R6Class("PermutedBlockList",
 )
 
 q1 <- PermutedBlockList$new()
-bind_rows(q1$q)
+bind_rows(q1$queue)
 
-q2 <- PermutedBlockList$new(arms = c("A", "B", "C"), block_sizes = c(6, 9, 12))
-as.data.frame(bind_rows(q2$q))
+q2 <- PermutedBlockList$new(arms = c("A", "B", "C"), block_sizes = c(6, 9, 12), seed = 1)
+as.data.frame(bind_rows(q2$queue))
 
