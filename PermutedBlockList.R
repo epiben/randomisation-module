@@ -9,8 +9,6 @@ PermutedBlockList <- R6Class("PermutedBlockList",
     queue = list(),
     max_allocs = NULL,
     n_randomised = 0,
-    allocation_id = 1,
-    block_id = 1,
     arms = NULL,
     block_sizes = NULL,
     enque_n_blocks = NULL,
@@ -23,6 +21,8 @@ PermutedBlockList <- R6Class("PermutedBlockList",
       self$block_sizes <- block_sizes
       self$enque_n_blocks <- enque_n_blocks
       self$seed <- seed
+
+      private$n_arms <- length(arms)
 
       private$check_block_params()
       private$enque()
@@ -53,6 +53,10 @@ PermutedBlockList <- R6Class("PermutedBlockList",
   ),
 
   private = list(
+    n_arms = NULL,
+    allocation_id = 1,
+    block_id = 1,
+
     check_block_params = function() {
       if (any(self$block_sizes %% length(self$arms) != 0)) {
         stop("All blocks sizes must be a multiple of the number of arms", call. = FALSE)
@@ -67,20 +71,19 @@ PermutedBlockList <- R6Class("PermutedBlockList",
     enque = function() {
       allocate_within_block <- function(block_size, arms) {
         allocs <- list()
-        n_arms <- length(arms)
         for (i in seq_len(block_size)) {
-          seed_used <- private$set_seed()
-          weights <- block_size/n_arms - map_dbl(arms, ~ sum(. == allocs))
+          seed_used <- private$set_seed() # sets a new seed and returns it
+          weights <- block_size/private$n_arms - map_dbl(arms, ~ sum(. == allocs))
           allocs[[i]] <- list(
-            allocation_id = self$allocation_id,
-            block_id = self$block_id,
+            allocation_id = private$allocation_id,
+            block_id = private$block_id,
             arm = sample(arms, 1, prob = weights),
             seed_used = seed_used
           )
-          self$allocation_id <- self$allocation_id + 1
+          private$allocation_id <- private$allocation_id + 1
         }
-        self$block_id <- self$block_id + 1
-        stopifnot(all(table(allocs$arm) == block_size/n_arms))
+        private$block_id <- private$block_id + 1
+        stopifnot(all(table(allocs$arm) == block_size/private$n_arms))
         return(allocs)
       }
 
