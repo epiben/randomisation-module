@@ -1,7 +1,8 @@
-library(glue)
 library(R6)
+library(glue)
 library(purrr)
 library(lubridate)
+library(dplyr)
 
 PermutedBlockList <- R6Class("PermutedBlockList",
   public = list(
@@ -42,7 +43,7 @@ PermutedBlockList <- R6Class("PermutedBlockList",
         cat("Will randomise no more patients, max_allocs reached")
         return(NULL)
       }
-      if (length(self$q) == 0) private$enque()
+      if (length(self$queue) == 0) private$enque()
 
       val <- self$queue[[1]]
       self$queue <- self$queue[-1]
@@ -92,6 +93,9 @@ PermutedBlockList <- R6Class("PermutedBlockList",
 
 q1 <- PermutedBlockList$new()
 bind_rows(q1$queue)
+for (i in seq_len(30)) {
+  print(glue("{i}: {q1$allocate_next()}"))
+}
 
 q2 <- PermutedBlockList$new(arms = c("A", "B", "C"), block_sizes = c(6, 9, 12), seed = 1)
 as.data.frame(bind_rows(q2$queue))
