@@ -49,6 +49,9 @@ PermutedBlockList <- R6Class("PermutedBlockList",
       self$queue <- self$queue[-1]
       self$n_randomised <- self$n_randomised + 1
       return(val$arm)
+    },
+    show_tidy_list = function() {
+      bind_rows(self$queue)
     }
   ),
 
@@ -95,11 +98,12 @@ PermutedBlockList <- R6Class("PermutedBlockList",
 )
 
 q1 <- PermutedBlockList$new()
-bind_rows(q1$queue)
+q1$show_tidy_list()
+
 for (i in seq_len(30)) {
   print(glue("{i}: {q1$allocate_next()}"))
 }
 
 q2 <- PermutedBlockList$new(arms = c("A", "B", "C"), block_sizes = c(6, 9, 12), seed = 1)
-as.data.frame(bind_rows(q2$queue))
+as.data.frame(q2$show_tidy_list())
 
